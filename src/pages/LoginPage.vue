@@ -8,6 +8,10 @@
     <q-separator />
 
     <q-card-section>
+      <q-banner v-if="isDemo" inline-actions class="q-mb-md bg-grey-9 text-amber-5">
+        Modo demo activo (solo desarrollo). Puedes usar las credenciales demo o lo configurado en
+        .env.
+      </q-banner>
       <q-form ref="formRef" @submit.prevent="onSubmit" class="q-gutter-md">
         <q-input
           v-model="email"
@@ -45,7 +49,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from 'src/stores/auth'
 import { useApiError } from 'src/composables/useApiError'
@@ -61,6 +65,10 @@ const remember = ref(true)
 const isPwd = ref(true)
 
 const loading = ref(false)
+
+const isDemo = computed(
+  () => import.meta.env.VITE_USE_FAKE_AUTH === 'true' && !import.meta.env.PROD,
+)
 
 const rules = {
   required: (v) => !!v || 'Requerido',

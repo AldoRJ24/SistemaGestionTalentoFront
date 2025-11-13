@@ -45,7 +45,24 @@ VITE_API_BASE_URL=https://api.midominio.com
 VITE_FEATURE_SKILLS=true
 ```
 
-`boot/axios.js` puede leer `import.meta.env.VITE_API_BASE_URL` (pendiente de refactor si se aprueba).
+`boot/axios.js` lee `import.meta.env.VITE_API_BASE_URL`.
+
+### Modo demo (desarrollo)
+
+Para probar sin backend, activa el modo demo (no se usa en producción):
+
+```
+VITE_USE_FAKE_AUTH=true
+VITE_DEMO_EMAIL=admin@demo.com
+VITE_DEMO_PASSWORD=Admin123!
+# o permitir cualquier combinación (solo dev)
+VITE_DEMO_ALLOW_ANY=false
+```
+
+Cómo quitarlo cuando exista backend:
+
+- Deja `VITE_USE_FAKE_AUTH=false` (o elimina la variable) y reinicia el dev server/build.
+- El código del store ignora el modo demo en producción (`import.meta.env.PROD`).
 
 ## Módulos implementados
 
