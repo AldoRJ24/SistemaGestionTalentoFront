@@ -1,8 +1,5 @@
 <template>
   <q-page padding>
-    <q-banner v-if="isDemo" inline-actions class="q-mb-md bg-grey-9 text-amber-5">
-      Listado en modo demo: datos locales (no hay backend). Las acciones afectan solo tu navegador.
-    </q-banner>
     <div class="row items-center q-col-gutter-md q-mb-md">
       <div class="col-12 col-md-4">
         <q-input
@@ -102,8 +99,6 @@ const columns = [
 ]
 
 const search = ref('')
-
-const isDemo = computed(() => import.meta.env.VITE_USE_FAKE_API === 'true' && !import.meta.env.PROD)
 
 async function onRequest(props) {
   const { page, rowsPerPage, sortBy, descending } = props.pagination
