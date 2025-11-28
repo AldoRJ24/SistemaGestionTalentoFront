@@ -31,25 +31,44 @@
           </q-item-section>
         </q-item>
 
-        <!-- Futuras secciones
-        <q-item to="/competencias" exact clickable v-ripple>
+        <q-item to="/perfil" exact clickable v-ripple>
           <q-item-section avatar>
-            <q-icon name="psychology" />
+            <q-icon name="person" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Competencias</q-item-label>
+            <q-item-label>Mi Perfil</q-item-label>
           </q-item-section>
         </q-item>
 
-        <q-item to="/vacantes" exact clickable v-ripple>
+        <q-item
+          v-if="authStore.user?.rol === 'AdminRRHH'"
+          to="/admin/skills"
+          exact
+          clickable
+          v-ripple
+        >
           <q-item-section avatar>
-            <q-icon name="work" />
+            <q-icon name="list" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Vacantes</q-item-label>
+            <q-item-label>Catálogo de Habilidades</q-item-label>
           </q-item-section>
         </q-item>
-        -->
+
+        <q-item
+          v-if="authStore.user?.rol === 'AdminRRHH'"
+          to="/admin/dashboard"
+          exact
+          clickable
+          v-ripple
+        >
+          <q-item-section avatar>
+            <q-icon name="analytics" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Dashboard Analítico</q-item-label>
+          </q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
 
@@ -61,6 +80,9 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useAuthStore } from 'stores/auth'
+
+const authStore = useAuthStore()
 
 const leftDrawerOpen = ref(false)
 

@@ -3,7 +3,10 @@ const routes = [
   {
     path: '/',
     component: () => import('layouts/AuthLayout.vue'),
-    children: [{ path: '', name: 'login', component: () => import('pages/LoginPage.vue') }],
+    children: [
+      { path: '', name: 'login', component: () => import('pages/LoginPage.vue') },
+      { path: 'register', name: 'register', component: () => import('pages/RegisterPage.vue') },
+    ],
   },
 
   // Rutas protegidas (app)
@@ -13,10 +16,33 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       {
-        path: 'colaboradores',
-        name: 'colaboradores',
-        component: () => import('pages/CollaboratorsPage.vue'),
+        path: 'dashboard/lider',
+        name: 'dashboard-lider',
+        component: () => import('pages/LeaderDashboardPage.vue'),
       },
+      {
+        path: 'dashboard/colaborador',
+        name: 'dashboard-colaborador',
+        component: () => import('pages/CollaboratorDashboardPage.vue'),
+      },
+      {
+        path: 'perfil',
+        name: 'perfil',
+        component: () => import('pages/ProfilePage.vue'),
+      },
+      {
+        path: 'admin/skills',
+        name: 'admin-skills',
+        component: () => import('pages/AdminSkillsPage.vue'),
+        meta: { requiresAuth: true, roles: ['AdminRRHH'] },
+      },
+      {
+        path: 'admin/dashboard',
+        name: 'admin-dashboard',
+        component: () => import('pages/AdminDashboardPage.vue'),
+        meta: { requiresAuth: true, roles: ['AdminRRHH'] },
+      },
+
       // { path: 'competencias', component: () => import('pages/SkillsPage.vue') },
       // { path: 'vacantes', component: () => import('pages/VacanciesPage.vue') },
     ],

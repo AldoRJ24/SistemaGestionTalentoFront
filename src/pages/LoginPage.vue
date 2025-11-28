@@ -54,6 +54,10 @@
             no-caps
           />
         </div>
+        <div class="q-mt-sm text-center">
+          <span class="text-grey-7">¿No tienes cuenta?</span>
+          <q-btn flat color="primary" label="Regístrate aquí" to="/register" no-caps />
+        </div>
       </q-form>
     </q-card-section>
   </q-card>

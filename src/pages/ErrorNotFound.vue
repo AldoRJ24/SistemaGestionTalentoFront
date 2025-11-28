@@ -11,7 +11,25 @@
         text-color="blue"
         unelevated
         to="/"
-        label="Go Home"
+        label="Ir al Inicio"
+        no-caps
+      />
+      <q-btn
+        class="q-mt-xl q-ml-sm"
+        color="white"
+        text-color="blue"
+        unelevated
+        to="/login"
+        label="Ir al Login"
+        no-caps
+      />
+      <q-btn
+        class="q-mt-xl q-ml-sm"
+        color="white"
+        text-color="blue"
+        outline
+        @click="$router.go(-1)"
+        label="Regresar"
         no-caps
       />
     </div>

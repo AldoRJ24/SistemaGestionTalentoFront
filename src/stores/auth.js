@@ -18,10 +18,9 @@ export const useAuthStore = defineStore('auth', {
     // Redirección por rol: admin | leader | collaborator
     homeByRole(role) {
       const r = (role || this.user?.role || '').toString().toLowerCase()
-      if (r === 'admin' || r === 'rrhh' || r === 'hr' || r === 'administrator')
-        return '/dashboard/rrhh'
+      if (r === 'adminrrhh' || r === 'admin' || r === 'rrhh') return '/admin/skills'
       if (r === 'leader' || r === 'líder' || r === 'lider') return '/dashboard/lider'
-      return '/colaboradores'
+      return '/dashboard/colaborador'
     },
 
     setToken(token) {
@@ -35,16 +34,26 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    setUser(user) {
+      this.user = user || null
+      if (this.user) {
+        localStorage.setItem('auth_user', JSON.stringify(this.user))
+      } else {
+        localStorage.removeItem('auth_user')
+      }
+    },
+
     async login({ email, password }) {
       this.loading = true
       this.error = null
       try {
         // Ajusta el endpoint de login según tu API
-        const { data } = await api.post('/auth/login', { email, password })
+        console.log('Intentando login en:', api.defaults.baseURL + '/api/Auth/login')
+        const { data } = await api.post('/api/Auth/login', { email, password })
         const token = data?.token
         this.setToken(token)
         // Opcional: cargar datos del usuario actual
-        this.user = data?.user || null
+        this.setUser(data?.user)
         return data
       } catch (err) {
         this.error = err
@@ -64,7 +73,7 @@ export const useAuthStore = defineStore('auth', {
         const fakeToken = 'demo-token-' + Date.now()
         const fakeUser = { id: 1, name: 'Usuario Demo', email: 'demo@example.com', role: 'admin' }
         this.setToken(fakeToken)
-        this.user = fakeUser
+        this.setUser(fakeUser)
         return { token: fakeToken, user: fakeUser }
       } catch (err) {
         this.error = err
@@ -75,7 +84,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     logout() {
-      this.user = null
+      this.setUser(null)
       this.setToken('')
     },
 
@@ -84,6 +93,10 @@ export const useAuthStore = defineStore('auth', {
       const token = localStorage.getItem(TOKEN_KEY)
       if (token) {
         this.setToken(token)
+      }
+      const user = localStorage.getItem('auth_user')
+      if (user) {
+        this.user = JSON.parse(user)
       }
     },
   },
