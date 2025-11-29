@@ -42,8 +42,10 @@
           <q-card-section>
             <div class="text-h6">Skills Más Comunes (Colaboradores)</div>
           </q-card-section>
-          <q-card-section>
-            <Bar v-if="loaded" :data="collaboratorSkillsData" :options="chartOptions" />
+          <q-card-section class="flex flex-center">
+            <div style="width: 300px; height: 300px">
+              <Doughnut v-if="loaded" :data="collaboratorSkillsData" :options="doughnutOptions" />
+            </div>
           </q-card-section>
         </q-card>
       </div>
@@ -58,6 +60,18 @@
             <div style="width: 300px; height: 300px">
               <Doughnut v-if="loaded" :data="vacancyStatusData" :options="doughnutOptions" />
             </div>
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <!-- Supply vs Demand Trend -->
+      <div class="col-12">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Oferta vs Demanda (Últimos 6 Meses)</div>
+          </q-card-section>
+          <q-card-section>
+            <Line v-if="loaded" :data="supplyDemandData" :options="chartOptions" />
           </q-card-section>
         </q-card>
       </div>
@@ -77,10 +91,22 @@ import {
   CategoryScale,
   LinearScale,
   ArcElement,
+  PointElement,
+  LineElement,
 } from 'chart.js'
-import { Bar, Doughnut } from 'vue-chartjs'
+import { Bar, Doughnut, Line } from 'vue-chartjs'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement)
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement,
+)
 
 const loaded = ref(false)
 const stats = ref({
@@ -89,6 +115,7 @@ const stats = ref({
   topRequestedSkills: [],
   topCollaboratorSkills: [],
   vacanciesByStatus: [],
+  supplyDemandTrend: [],
 })
 
 const chartOptions = {
@@ -112,13 +139,26 @@ const requestedSkillsData = computed(() => ({
   ],
 }))
 
+// Helper to generate random colors
+const generateColors = (count) => {
+  const colors = []
+  for (let i = 0; i < count; i++) {
+    const r = Math.floor(Math.random() * 255)
+    const g = Math.floor(Math.random() * 255)
+    const b = Math.floor(Math.random() * 255)
+    colors.push(`rgba(${r}, ${g}, ${b}, 0.7)`)
+  }
+  return colors
+}
+
 const collaboratorSkillsData = computed(() => ({
   labels: stats.value.topCollaboratorSkills.map((s) => s.name),
   datasets: [
     {
       label: 'Colaboradores',
-      backgroundColor: '#26A69A',
+      backgroundColor: generateColors(stats.value.topCollaboratorSkills.length),
       data: stats.value.topCollaboratorSkills.map((s) => s.count),
+      hoverOffset: 4,
     },
   ],
 }))
@@ -129,6 +169,26 @@ const vacancyStatusData = computed(() => ({
     {
       backgroundColor: ['#41B883', '#E46651', '#00D8FF', '#DD1B16'],
       data: stats.value.vacanciesByStatus.map((s) => s.count),
+    },
+  ],
+}))
+
+const supplyDemandData = computed(() => ({
+  labels: stats.value.supplyDemandTrend.map((t) => t.period),
+  datasets: [
+    {
+      label: 'Demanda (Vacantes)',
+      backgroundColor: '#1976D2',
+      borderColor: '#1976D2',
+      data: stats.value.supplyDemandTrend.map((t) => t.vacancies),
+      tension: 0.4, // Smooth curve
+    },
+    {
+      label: 'Oferta (Colaboradores)',
+      backgroundColor: '#26A69A',
+      borderColor: '#26A69A',
+      data: stats.value.supplyDemandTrend.map((t) => t.collaborators),
+      tension: 0.4,
     },
   ],
 }))

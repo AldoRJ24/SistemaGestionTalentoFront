@@ -25,6 +25,16 @@
           <template v-slot:body-cell-actions="props">
             <q-td :props="props">
               <q-btn flat color="primary" label="Ver Skills" @click="viewSkills(props.row)" />
+              <q-btn
+                flat
+                color="negative"
+                icon="delete"
+                round
+                size="sm"
+                @click="removeCollaborator(props.row)"
+              >
+                <q-tooltip>Eliminar del Equipo</q-tooltip>
+              </q-btn>
             </q-td>
           </template>
         </q-table>
@@ -233,7 +243,12 @@
           <q-list separator v-else>
             <q-item v-for="match in vacancyMatches" :key="match.usuarioId">
               <q-item-section avatar>
-                <q-avatar color="primary" text-color="white">
+                <q-avatar
+                  color="primary"
+                  text-color="white"
+                  class="cursor-pointer"
+                  @click="goToProfile(match.usuarioId)"
+                >
                   {{ match.nombreUsuario ? match.nombreUsuario.charAt(0) : '?' }}
                 </q-avatar>
               </q-item-section>
@@ -241,43 +256,35 @@
                 <q-item-label>{{ match.nombreUsuario }}</q-item-label>
                 <q-item-label caption>{{ match.email }}</q-item-label>
                 <div class="q-mt-sm">
-                  <div class="text-caption text-grey-7">Habilidades:</div>
-                  <div class="q-gutter-xs">
-                    <q-chip
-                      v-for="skill in match.skillsCoincidentes"
-                      :key="'c-' + skill"
-                      color="green-5"
-                      text-color="white"
-                      size="sm"
-                      icon="check"
-                    >
-                      {{ skill }}
-                    </q-chip>
-                    <q-chip
-                      v-for="skill in match.skillsFaltantes"
-                      :key="'f-' + skill"
-                      color="red-5"
-                      text-color="white"
-                      size="sm"
-                      icon="close"
-                    >
-                      {{ skill }}
-                    </q-chip>
-                    <span
-                      v-if="
-                        match.skillsCoincidentes.length === 0 && match.skillsFaltantes.length === 0
-                      "
-                      class="text-caption text-italic text-grey"
-                    >
-                      No se especificaron habilidades requeridas.
-                    </span>
+                  <div class="text-caption text-grey-7 q-mb-xs">Detalle de Habilidades:</div>
+                  <div v-if="match.skillDetails && match.skillDetails.length > 0">
+                    <div v-for="(detail, idx) in match.skillDetails" :key="idx" class="q-mb-sm">
+                      <div class="row justify-between text-caption">
+                        <span>{{ detail.skillNombre }}</span>
+                        <span :class="'text-' + detail.color">
+                          {{ detail.porcentaje }}% ({{ detail.nivelCandidato }} /
+                          {{ detail.nivelRequerido }})
+                        </span>
+                      </div>
+                      <q-linear-progress
+                        :value="detail.porcentaje / 100"
+                        :color="detail.color"
+                        size="6px"
+                        rounded
+                      />
+                    </div>
+                  </div>
+                  <div v-else class="text-caption text-italic text-grey">
+                    No se especificaron habilidades requeridas.
                   </div>
                 </div>
               </q-item-section>
               <q-item-section side top style="width: 150px">
-                <div class="text-caption text-center">{{ match.porcentaje }}% Coincidencia</div>
+                <div class="text-caption text-center">
+                  {{ match.porcentajeCoincidencia }}% Coincidencia
+                </div>
                 <q-linear-progress
-                  :value="match.porcentaje / 100"
+                  :value="match.porcentajeCoincidencia / 100"
                   color="green"
                   size="10px"
                   rounded
@@ -301,8 +308,10 @@ import { ref, onMounted } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'stores/auth'
+import { useRouter } from 'vue-router'
 
 const $q = useQuasar()
+const router = useRouter()
 const auth = useAuthStore()
 const tab = ref('team')
 
@@ -495,11 +504,21 @@ async function deleteVacancy(vacancy) {
 
 async function saveVacancy() {
   try {
+    if (!auth.user) {
+      $q.notify({
+        type: 'negative',
+        message: 'No se encontró sesión de usuario. Por favor inicie sesión nuevamente.',
+      })
+      return
+    }
+
     const payload = {
       ...newVacancy.value,
       liderId: auth.user.id,
       skills: newVacancy.value.skills.map((s) => ({ skillId: s.skillId, nivelId: s.nivelId })),
     }
+    console.log('Saving vacancy with payload:', payload)
+    console.log('Auth User:', auth.user)
 
     if (isEditing.value) {
       await api.put(`/api/Vacantes/${editingVacancyId.value}`, payload)
@@ -554,7 +573,7 @@ async function viewMatches(vacancy) {
   selectedVacancy.value = vacancy
   try {
     const { data } = await api.get(`/api/Matches/vacante/${vacancy.id}`)
-    vacancyMatches.value = data.sort((a, b) => b.porcentaje - a.porcentaje)
+    vacancyMatches.value = data.sort((a, b) => b.porcentajeCoincidencia - a.porcentajeCoincidencia)
     showMatchesDialog.value = true
   } catch (error) {
     if (error.response && error.response.status === 404) {
@@ -583,5 +602,27 @@ function getStatusColor(status) {
   if (status === 'Validado') return 'green'
   if (status === 'Rechazado') return 'red'
   return 'orange'
+}
+
+function goToProfile(userId) {
+  router.push(`/perfil/${userId}`)
+}
+
+async function removeCollaborator(collab) {
+  $q.dialog({
+    title: 'Confirmar',
+    message: `¿Estás seguro de que deseas eliminar a ${collab.nombre} de tu equipo?`,
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await api.delete(`/api/Lider/team/${collab.id}`)
+      $q.notify({ type: 'positive', message: 'Colaborador eliminado del equipo' })
+      fetchTeam()
+    } catch (error) {
+      console.error(error)
+      $q.notify({ type: 'negative', message: 'Error al eliminar colaborador' })
+    }
+  })
 }
 </script>

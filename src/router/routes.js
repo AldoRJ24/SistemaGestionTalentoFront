@@ -31,6 +31,11 @@ const routes = [
         component: () => import('pages/ProfilePage.vue'),
       },
       {
+        path: 'perfil/:id',
+        name: 'perfil-detalle',
+        component: () => import('pages/ProfilePage.vue'),
+      },
+      {
         path: 'admin/skills',
         name: 'admin-skills',
         component: () => import('pages/AdminSkillsPage.vue'),

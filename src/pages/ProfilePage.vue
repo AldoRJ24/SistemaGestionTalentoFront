@@ -10,23 +10,48 @@
             </q-avatar>
 
             <div class="q-gutter-sm q-mb-md">
-              <q-input v-model="user.fotoPerfil" label="URL Foto de Perfil" dense outlined />
+              <q-input
+                v-model="user.fotoPerfil"
+                label="URL Foto de Perfil"
+                dense
+                outlined
+                :readonly="!isOwnProfile"
+              />
               <div class="row q-col-gutter-sm">
                 <div class="col-6">
-                  <q-input v-model="user.nombre" label="Nombre" dense outlined />
+                  <q-input
+                    v-model="user.nombre"
+                    label="Nombre"
+                    dense
+                    outlined
+                    :readonly="!isOwnProfile"
+                  />
                 </div>
                 <div class="col-6">
-                  <q-input v-model="user.apellido" label="Apellido" dense outlined />
+                  <q-input
+                    v-model="user.apellido"
+                    label="Apellido"
+                    dense
+                    outlined
+                    :readonly="!isOwnProfile"
+                  />
                 </div>
               </div>
-              <q-input v-model="user.puestoActual" label="Puesto Actual" dense outlined />
+              <q-input
+                v-model="user.puestoActual"
+                label="Puesto Actual"
+                dense
+                outlined
+                :readonly="!isOwnProfile"
+              />
             </div>
 
-            <div v-if="!isLeader">
+            <div v-if="!isLeader || !isOwnProfile">
               <q-chip :color="user.openToWork ? 'green' : 'grey'" text-color="white" icon="work">
                 {{ user.openToWork ? 'Open to Work' : 'No disponible' }}
               </q-chip>
               <q-toggle
+                v-if="isOwnProfile"
                 v-model="user.openToWork"
                 label="Disponible para ofertas"
                 @update:model-value="updateOpenToWork"
@@ -44,8 +69,10 @@
               outlined
               autogrow
               placeholder="Describe tu experiencia y objetivos..."
+              :readonly="!isOwnProfile"
             />
             <q-btn
+              v-if="isOwnProfile"
               label="Guardar Descripción"
               color="primary"
               flat
@@ -77,8 +104,16 @@
                       :href="cert.url"
                       target="_blank"
                     />
-                    <q-btn flat round icon="edit" size="sm" @click="openEditCert(cert)" />
                     <q-btn
+                      v-if="isOwnProfile"
+                      flat
+                      round
+                      icon="edit"
+                      size="sm"
+                      @click="openEditCert(cert)"
+                    />
+                    <q-btn
+                      v-if="isOwnProfile"
                       flat
                       round
                       icon="delete"
@@ -91,6 +126,7 @@
               </q-item>
             </q-list>
             <q-btn
+              v-if="isOwnProfile"
               flat
               color="primary"
               label="Agregar Certificación"
@@ -102,12 +138,18 @@
       </div>
 
       <!-- Columna Derecha: Skills -->
-      <div class="col-12 col-md-8" v-if="!isLeader">
+      <div class="col-12 col-md-8" v-if="!isLeader || !isOwnProfile">
         <q-card>
           <q-card-section>
             <div class="row items-center justify-between">
               <div class="text-h6">Mis Habilidades</div>
-              <q-btn color="primary" icon="add" label="Agregar Skill" @click="openAddSkill" />
+              <q-btn
+                v-if="isOwnProfile"
+                color="primary"
+                icon="add"
+                label="Agregar Skill"
+                @click="openAddSkill"
+              />
             </div>
           </q-card-section>
 
@@ -140,7 +182,14 @@
                         :label="skill.estado || 'Pendiente'"
                         class="q-mr-sm"
                       />
-                      <q-btn flat round icon="edit" size="sm" @click="openEditSkill(skill)" />
+                      <q-btn
+                        v-if="isOwnProfile"
+                        flat
+                        round
+                        icon="edit"
+                        size="sm"
+                        @click="openEditSkill(skill)"
+                      />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -164,7 +213,14 @@
                         :label="skill.estado || 'Pendiente'"
                         class="q-mr-sm"
                       />
-                      <q-btn flat round icon="edit" size="sm" @click="openEditSkill(skill)" />
+                      <q-btn
+                        v-if="isOwnProfile"
+                        flat
+                        round
+                        icon="edit"
+                        size="sm"
+                        @click="openEditSkill(skill)"
+                      />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -247,8 +303,10 @@ import { ref, onMounted, computed } from 'vue'
 import { api } from 'boot/axios'
 import { useAuthStore } from 'stores/auth'
 import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
 
 const $q = useQuasar()
+const route = useRoute()
 const authStore = useAuthStore()
 const user = ref({
   colaboradorSkills: [],
@@ -272,6 +330,7 @@ const newCert = ref({ nombre: '', entidad: '', url: '', fechaObtencion: '' })
 
 // Computed
 const isLeader = computed(() => authStore.user?.rol === 'Lider')
+const isOwnProfile = computed(() => !route.params.id || route.params.id == authStore.user?.id)
 
 const technicalSkills = computed(
   () => user.value.colaboradorSkills?.filter((s) => s.skill.categoria === 'Tecnica') || [],
@@ -287,7 +346,7 @@ onMounted(async () => {
 
 async function fetchUserData() {
   try {
-    const userId = authStore.user?.id
+    const userId = route.params.id || authStore.user?.id
     if (!userId) return
     const { data } = await api.get(`/api/Usuarios/${userId}`)
     user.value = data
